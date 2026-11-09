@@ -64,6 +64,7 @@ private class ExternalPlaylistsImpl(
     private val pathInterpreterFactory = MediaStorePathInterpreter.Factory.from(volumeManager)
 
     override suspend fun scan(library: Library): List<Pair<String, List<Song>>> {
+        val start = System.currentTimeMillis()
         val out = mutableListOf<Pair<String, List<Song>>>()
         val seen = mutableSetOf<String>()
 
@@ -139,6 +140,10 @@ private class ExternalPlaylistsImpl(
             Log.w(TAG, "Could not query MediaStore playlists", e)
         }
 
+        Log.d(
+            TAG,
+            "Scanned MediaStore playlists in ${System.currentTimeMillis() - start}ms, " +
+                "${out.size} new playlist(s)")
         return out
     }
 
