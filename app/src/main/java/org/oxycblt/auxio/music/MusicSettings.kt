@@ -120,7 +120,14 @@ class MusicSettingsImpl @Inject constructor(@ApplicationContext private val cont
                     getString(R.string.set_key_locations_mode),
                     IntegerTable.LOCATION_MODE_SAF,
                 )
-            return LocationMode.fromInt(mode) ?: LocationMode.SAF
+            val locationMode = LocationMode.fromInt(mode) ?: LocationMode.SAF
+            // FORK: a SAF scan with no folders configured can never find any music, which leaves
+            // fresh installs with a permanently empty library. Fall back to the MediaStore in that
+            // case so that the library (and the playlist adoption) works out of the box.
+            if (locationMode == LocationMode.SAF && safQuery.source.isEmpty()) {
+                return LocationMode.MEDIA_STORE
+            }
+            return locationMode
         }
         set(value) {
             sharedPreferences.edit {

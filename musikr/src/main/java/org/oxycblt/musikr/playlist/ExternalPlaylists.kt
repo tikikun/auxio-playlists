@@ -67,6 +67,10 @@ private class ExternalPlaylistsImpl(
         val start = System.currentTimeMillis()
         val out = mutableListOf<Pair<String, List<Song>>>()
         val seen = mutableSetOf<String>()
+        // MediaStore's path interpreters can hand out different Volume instances for the same
+        // storage depending on how a path was obtained, which makes exact Path equality fail even
+        // though the file is the same. Fall back to comparing the volume-relative components only.
+        val byComponents = library.songs.groupBy { it.path.components }
 
         try {
             context.contentResolverSafe.useQuery(
@@ -124,8 +128,11 @@ private class ExternalPlaylistsImpl(
                     }
 
                     val songs =
-                        imported.paths.mapNotNull {
-                            it.firstNotNullOfOrNull(library::findSongByPath)
+                        imported.paths.mapNotNull { candidates ->
+                            candidates.firstNotNullOfOrNull { candidate ->
+                                library.findSongByPath(candidate)
+                                    ?: byComponents[candidate.components]?.firstOrNull()
+                            }
                         }
                     if (songs.isEmpty()) {
                         Log.w(TAG, "No songs of playlist $path could be resolved")

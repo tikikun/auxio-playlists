@@ -19,3 +19,8 @@ captures/
 
 # Fork build logs
 build*.log
+
+# Release signing (never commit the keystore or its passwords)
+keystore.properties
+*.jks
+*.keystore
