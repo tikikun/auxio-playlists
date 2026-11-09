@@ -49,6 +49,11 @@ This fork does the same, but reuses Auxio's existing M3U reader and its existing
    authority is `dev.alandao.auxio.image.CoverProvider`, and the label is "Alan Music Player".
    The upstream `org.oxycblt.auxio` install keeps working, so you can compare both.
 
+5. **`app/.../music/MusicSettings.kt`** (patched)
+   Upstream defaults to SAF storage mode with no folders configured, which can never find any
+   music — that is why a fresh install shows an empty library (and why the first playlist scan had
+   nothing to resolve). When SAF has no folders, the fork falls back to MediaStore mode.
+
 ## Behaviour notes
 
 * Scanning happens as part of the normal library index (app start / media changes). After the first
@@ -73,5 +78,13 @@ git -C media apply ../patches/0001-media-skip-ffmpeg-native-build.patch
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Debug builds are `debuggable`, so app-private data (`databases/playlist.db`) is inspectable with
+Debug builds are `debuggable`, so app-private data (`databases/user_music.db`) is inspectable with
 `adb shell run-as dev.alandao.auxio.debug`.
+
+Release builds are signed if `keystore.properties` exists (see `keystore.properties.example`):
+
+```sh
+cp keystore.properties.example keystore.properties   # then fill in the passwords
+./scripts/build.sh release
+```
+
