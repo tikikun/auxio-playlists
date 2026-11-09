@@ -46,7 +46,7 @@ This fork does the same, but reuses Auxio's existing M3U reader and its existing
 
 4. **Rebrand for side-by-side installs**
    `applicationId` is `dev.alandao.auxio` (`+ ".debug"` for debug builds), the cover provider
-   authority is `dev.alandao.auxio.image.CoverProvider`, and the label is "Auxio Playlists".
+   authority is `dev.alandao.auxio.image.CoverProvider`, and the label is "Alan Music Player".
    The upstream `org.oxycblt.auxio` install keeps working, so you can compare both.
 
 ## Behaviour notes
