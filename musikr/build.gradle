@@ -11,31 +11,18 @@ plugins {
 android {
     namespace 'org.oxycblt.musikr'
     compileSdk target_sdk
-    ndkVersion "$ndk_version"
 
     defaultConfig {
         minSdk min_sdk
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
-        externalNativeBuild {
-            cmake {
-                cppFlags ""
-            }
-        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    externalNativeBuild {
-        cmake {
-            path "src/main/cpp/CMakeLists.txt"
-            version "3.22.1"
         }
     }
 
@@ -82,21 +69,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
 }
 
-tasks.register("assembleTaglib", Exec, {
-    def jniDir = "$projectDir/src/main/cpp"
-    def libs = new File("$jniDir/taglib/pkg")
-    if (libs.exists()) {
-        commandLine "true"
-        return
-    }
-    def ndkDir = androidComponents.sdkComponents.ndkDirectory.get().asFile
-    commandLine "sh", "-c", "$jniDir/build_taglib.sh $jniDir $ndkDir"
-})
-
-afterEvaluate {
-    preDebugBuild.dependsOn assembleTaglib
-    preReleaseBuild.dependsOn assembleTaglib
-}
+// NOTE: The native taglib/ffmpeg libraries are shipped prebuilt as jniLibs instead of being
+// compiled from source, so the NDK is not required to build this fork.
 
 clean {
     delete "$projectDir/src/main/cpp/taglib/pkg"

@@ -16,3 +16,6 @@ captures/
 .kotlin
 .aider*
 .env
+
+# Fork build logs
+build*.log

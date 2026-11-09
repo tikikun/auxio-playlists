@@ -27,6 +27,7 @@ import org.oxycblt.musikr.Interpretation
 import org.oxycblt.musikr.MutableLibrary
 import org.oxycblt.musikr.graph.MusicGraph
 import org.oxycblt.musikr.model.LibraryFactory
+import org.oxycblt.musikr.playlist.ExternalPlaylists
 import org.oxycblt.musikr.playlist.db.StoredPlaylists
 import org.oxycblt.musikr.playlist.interpret.PlaylistInterpreter
 import org.oxycblt.musikr.tag.interpret.TagInterpreter
@@ -42,6 +43,7 @@ internal interface EvaluateStep {
                 PlaylistInterpreter.new(interpretation),
                 config.storage.storedPlaylists,
                 LibraryFactory.new(),
+                ExternalPlaylists.from(context),
             )
     }
 }
@@ -52,6 +54,7 @@ private class EvaluateStepImpl(
     private val playlistInterpreter: PlaylistInterpreter,
     private val storedPlaylists: StoredPlaylists,
     private val libraryFactory: LibraryFactory,
+    private val externalPlaylists: ExternalPlaylists,
 ) : EvaluateStep {
     override suspend fun evaluate(extractedMusic: Channel<Extracted>): MutableLibrary {
         val builder = MusicGraph.builder()
@@ -78,6 +81,20 @@ private class EvaluateStepImpl(
             }
         }
 
-        return libraryFactory.create(graph, storedPlaylists, playlistInterpreter)
+        var library = libraryFactory.create(graph, storedPlaylists, playlistInterpreter)
+
+        // Adopt playlist files that already exist in the MediaStore (M3U and friends) so that the
+        // user does not have to import every single one of them by hand. Playlists that already
+        // exist in the database are skipped by ExternalPlaylists, so this is idempotent.
+        try {
+            for ((name, songs) in externalPlaylists.scan(library)) {
+                if (library.findPlaylistByName(name) != null) continue
+                library = library.createPlaylist(name, songs)
+            }
+        } catch (e: Exception) {
+            Log.w("EvaluateStep", "Could not adopt external playlists", e)
+        }
+
+        return library
     }
 }
